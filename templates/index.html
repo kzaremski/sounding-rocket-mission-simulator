@@ -4,10 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CC of CO Sounding Rocket Mission Simulator</title>
-    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div id="root" style="max-width: 100vw; width: 100vw;"></div>
-    <script src="/static/build/main.js"></script>
+    <img id="top-nasa-logo" src="/static/img/NASA_Worm_logo.svg">
+    <h2>Community Colleges of Colorado</h2>
+    <h1>SOUNDING ROCKET SIMULATOR</h1>
+    
+    <h3>CURRENT MISSION DETAILS</h3>
+    <div id="mission-details">
+        <div class="jumbotron">
+            <div id="launch-time" class="segment-display"></div>
+            <p>LAUNCH RELATIVE TIME</p>
+        </div>
+        <div>
+            <div id="current-draw" class="segment-display"></div>
+            <p>CURRENT DRAW (A)</p>
+        </div>
+        <div>
+            <div id="total-power" class="segment-display"></div>
+            <p>TOTAL DRAW (Ah)</p>
+        </div>
+        <div class="jumbotron">
+            <div id="next-timer-event" class="segment-display"></div>
+            <p>NEXT TIMER EVENT</p>
+        </div>
+    </div>
+    
+    <h3>OUTPUT CHANNEL INDICATORS</h3>
+    <h3>MANUAL CONTROL</h3>
+    <h3>AUTOMATED MISSION</h3>
+    <h3>CONFIGURE MISSION PARAMETERS</h3>
+    <h3>TELEMETRY OUTPUT</h3>
+    <div id="telemetry">LOADING TELEMETRY OUTPUT</div>
+    
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/jquery-ui.min.js"></script>
+    <script src="/static/js/knockout-2.2.1.js"></script>
+    <script src="/static/js/sevenSeg.js"></script>
+    <script src="/static/main.js"></script>
 </body>
 </html>

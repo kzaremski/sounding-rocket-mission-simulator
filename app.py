@@ -48,6 +48,13 @@ if linuxSystem:
     GPIO.setup(TE_2_RELAY, GPIO.OUT)
     GPIO.setup(TE_3_RELAY, GPIO.OUT)
 
+# Monitor telemetry (if we are running on a RaspberryPi)
+telemetryOutput = ""
+def monitorTelemetry():
+    pass
+if linuxSystem:
+    pass
+
 # Root
 @app.route("/")
 @app.route("/run")

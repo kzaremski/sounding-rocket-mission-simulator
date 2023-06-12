@@ -3,9 +3,9 @@ import React from 'react';
 
 const ConfigureTab = () => {
     return (
-        <div>
-            test
-        </div>
+        <>
+            <p>From this panel you can</p>
+        </>
     );
 }
 

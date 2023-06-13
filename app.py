@@ -5,20 +5,17 @@
         port that represents spacecraft telemetry, and and ammeter to monitor current draw of the payload.
 """
 
-# See if we are running on linux
-import sys
-linuxSystem = sys.platform == "linux" or sys.platform == "linux2"
-
 # Import dependencies
 from flask import Flask, render_template, send_from_directory, request
 import configparser
 import time 
 from database import Database
+import multiprocessing
 import asyncio
 import json
 from flask_socketio import SocketIO, send
-# If we are running in test mode on a non Pi computer, do not import GPIO module
-if linuxSystem: import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
+import serial
  
 # Flask Application Instance
 app = Flask(__name__)
@@ -43,29 +40,33 @@ PORT = int(config["App"]["PORT"])
 database = Database("database.sqlite")
 
 # Setup GPIO pins (if we are running on a Raspberry Pi)
-if linuxSystem:
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(POWER_SUPPLY_RELAY, GPIO.OUT)
-    GPIO.setup(GSE_1_RELAY, GPIO.OUT)
-    GPIO.setup(GSE_2_RELAY, GPIO.OUT)
-    GPIO.setup(TE_R_A_RELAY, GPIO.OUT)
-    GPIO.setup(TE_R_B_RELAY, GPIO.OUT)
-    GPIO.setup(TE_1_RELAY, GPIO.OUT)
-    GPIO.setup(TE_2_RELAY, GPIO.OUT)
-    GPIO.setup(TE_3_RELAY, GPIO.OUT)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(POWER_SUPPLY_RELAY, GPIO.OUT)
+GPIO.setup(GSE_1_RELAY, GPIO.OUT)
+GPIO.setup(GSE_2_RELAY, GPIO.OUT)
+GPIO.setup(TE_R_A_RELAY, GPIO.OUT)
+GPIO.setup(TE_R_B_RELAY, GPIO.OUT)
+GPIO.setup(TE_1_RELAY, GPIO.OUT)
+GPIO.setup(TE_2_RELAY, GPIO.OUT)
+GPIO.setup(TE_3_RELAY, GPIO.OUT)
 
 # Monitor telemetry (if we are running on a RaspberryPi)
 telemetryOutput = ""
+telemetrySerial = serial.Serial(
+    port="/dev/ttyS0",
+    baudrate=19200,
+    timeout=None
+)
 def monitorTelemetry():
-    pass
-if linuxSystem:
-    pass
+    # Loop and add serial output to the telemetry output string forever
+    while True:
+        telemetryOutput += telemetrySerial.read(1)
 
 # State websocket
 @socketio.on("message")
 def handle_message(message):
     send(json.dumps(
-            {
+        {
             "channels": {
                 "POWER_SUPPLY_RELAY": GPIO.input(POWER_SUPPLY_RELAY),
                 "GSE_1_RELAY": GPIO.input(GSE_1_RELAY),
@@ -121,6 +122,42 @@ def handleManualControl(channel):
     if GPIO.input(channel): GPIO.output(channel, GPIO.LOW)
     else: GPIO.output(channel, GPIO.HIGH)
     
+    return "Done!"
+
+missionThread = None
+# Automated Mission Operation
+
+# Mission Parameters Management
+@app.route("/api/mission/get")
+def getMissionParameters():
+    return json.dumps({
+        "GSE-1": database.getTimerEvent("GSE-1"),
+        "GSE-2": database.getTimerEvent("GSE-2"),
+        "TE-Ra": database.getTimerEvent("TE-Ra"),
+        "TE-Rb": database.getTimerEvent("TE-Rb"),
+        "TE-1": database.getTimerEvent("TE-1"),
+        "TE-2": database.getTimerEvent("TE-2"),
+        "TE-3": database.getTimerEvent("TE-3"),
+    })
+@app.route("/api/mission/set")
+def getMissionParameters():
+    json = request.json
+    if "GSE-1" in json: database.updateTimerEvent(json["GSE-1"]["time"], json["GSE-1"]["dwell"], json["GSE-1"]["enabled"])
+    if "GSE-2" in json: database.updateTimerEvent(json["GSE-2"]["time"], json["GSE-2"]["dwell"], json["GSE-2"]["enabled"])
+    if "TE-Ra" in json: database.updateTimerEvent(json["TE-Ra"]["time"], json["TE-Ra"]["dwell"], json["TE-Ra"]["enabled"])
+    if "TE-Rb" in json: database.updateTimerEvent(json["TE-Rb"]["time"], json["TE-Rb"]["dwell"], json["TE-Rb"]["enabled"])
+    if "TE-1" in json: database.updateTimerEvent(json["TE-1"]["time"], json["TE-1"]["dwell"], json["TE-1"]["enabled"])
+    if "TE-2" in json: database.updateTimerEvent(json["TE-2"]["time"], json["TE-2"]["dwell"], json["TE-2"]["enabled"])
+    if "TE-3" in json: database.updateTimerEvent(json["TE-3"]["time"], json["TE-3"]["dwell"], json["TE-3"]["enabled"])
+    return "Done!"
+
+# Telemetry
+@app.route("/api/telemetry/get")
+def getTelemetry():
+    return telemetryOutput
+@app.route("/api/telemetry/clear")
+def clearTelemetry():
+    telemetryOutput = ""
     return "Done!"
 
 # Static files

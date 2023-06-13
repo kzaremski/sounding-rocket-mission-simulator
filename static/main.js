@@ -142,6 +142,9 @@ document.getElementById("te1-button").addEventListener("click", handleManualCont
 document.getElementById("te2-button").addEventListener("click", handleManualControlButtonClick);
 document.getElementById("te3-button").addEventListener("click", handleManualControlButtonClick);
 
+// * AUTOMATED MISSION
+
+
 // Populate mission parameters
 const timerEvents = [
     "GSE-1",
@@ -152,23 +155,132 @@ const timerEvents = [
     "TE-2",
     "TE-3",
 ];
+let missionParameters = {
+    "GSE-1": {
+        time: -10.0,
+        dwell: 11.0,
+        enabled: false
+    },
+    "GSE-2": {
+        time: -10.0,
+        dwell: 11.0,
+        enabled: false
+    },
+    "TE-Ra": {
+        time: 0.0,
+        dwell: 1.0,
+        enabled: false
+    },
+    "TE-Rb": {
+        time: 0.0,
+        dwell: 1.0,
+        enabled: false
+    },
+    "TE-1": {
+        time: 0.0,
+        dwell: 1.0,
+        enabled: false
+    },
+    "TE-2": {
+        time: 0.0,
+        dwell: 1.0,
+        enabled: false
+    },
+    "TE-3": {
+        time: 0.0,
+        dwell: 1.0,
+        enabled: false
+    }
+} 
+
+/**
+ * Reset the state of the mission parameters inputs to the values that are currently stored in memory.
+ */
+function resetMissionParameters() {
+    // For each timer event
+    for (const timerEvent of timerEvents) {
+        document.getElementById(`${timerEvent}_enabled_checkbox`).checked = missionParameters[timerEvent].enabled;
+        document.getElementById(`${timerEvent}_time`).value = missionParameters[timerEvent].time;
+        document.getElementById(`${timerEvent}_dwell`).value = missionParameters[timerEvent].dwell;
+    }
+}
+document.getElementById("undo-changes-button").addEventListener("click", async () => {
+    // Depress the button
+    const button = document.getElementById("undo-changes-button");
+    button.classList.add("active");
+    setTimeout(() => {
+        button.classList.remove("active");
+    }, 500);
+    // Reset the parameters
+    resetMissionParameters();
+})
+
+/**
+ * Update the user interface to reflect the new mission parameters
+ */
+async function updateMissionParameters() {
+    // Acquire the new mission parameters from the server
+    const plainResponse = await fetch("/api/mission/set");
+    const response = await plainResponse.json();
+    // Set the mission parameters
+    missionParameters = response;
+    // Reset to the new values in memory
+    resetMissionParameters();
+}
+
+/**
+ * Submit the new mission parameters to the backend and then update those that are registered in the memory.
+ */
+async function submitMissionParameters() {
+    // New mission parameters object
+    let newMissionParameters = JSON.parse(JSON.stringify(missionParameters));
+    // For each timer event
+    for (const timerEvent of timerEvents) {
+        newMissionParameters[timerEvent].enabled = document.getElementById(`${timerEvent}_enabled_checkbox`).checked;
+        newMissionParameters[timerEvent].time = document.getElementById(`${timerEvent}_time`).value;
+        newMissionParameters[timerEvent].dwell = document.getElementById(`${timerEvent}_dwell`).value;
+    }
+    // Submit the new mission parameters object to the back end
+    await fetch("/api/mission/set", {
+        body: JSON.stringify(newMissionParameters)
+    });
+    // Update the mission parameters on the front end to reflect what is now saved in the database
+    updateMissionParameters();
+}
 
 const missionParametersTable = document.getElementById("mission-parameters-table");
 missionParametersTable.innerHTML = `
     <tr>
-        <td>Use?</td>
+        <td>Enabled?</td>
         <td>Event</td>
         <td>Time</td>
         <td>Dwell</td>
     </tr>
 `;
-for (timerEvent of timerEvents) {
+for (const timerEvent of timerEvents) {
     missionParametersTable.innerHTML += `
         <tr>
             <td><input type="checkbox" id="${timerEvent}_enabled_checkbox"/></td>
             <td>${timerEvent}</td>
-            <td><input type="number" value="0" id="${timerEvent}_time"/></td>
+            <td><input type="number id="${timerEvent}_time"/></td>
             <td><input type="number" min="1" value="1" id="${timerEvent}_dwell"/></td>
         </tr>
     `;
 }
+
+// * Telemetry
+async function updateTelemetry() {
+    const response = await fetch("/api/telemetry/get");
+    document.getElementById("telemetry").innerHTML = response;
+}
+document.getElementById("clear-telemetry-button").addEventListener("click", async () => {
+    await fetch("/api/telemetry/clear");
+})
+setInterval(updateTelemetry, 500);
+
+// Perform actions on load
+window.addEventListener("load", () => {
+    updateMissionParameters();
+})
+
+

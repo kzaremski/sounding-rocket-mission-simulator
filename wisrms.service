@@ -1,5 +1,5 @@
 [Unit]
-Description=Sounding Rocket Mission Simulator
+Description=Wallops Island Sounding Rocket Mission Simulator
 Documentation=https://github.com/kzaremski
 After=network.target
 
@@ -7,7 +7,7 @@ After=network.target
 WorkingDirectory=/home/pi/sounding-rocket-tester/
 Type=simple
 User=pi
-ExecStart=/usr/bin/python3 /home/pi/sounding-rocket-tester/app.js
+ExecStart=/usr/bin/python3 /home/pi/wisrms/app.js
 Restart=on-failure
 
 [Install]

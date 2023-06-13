@@ -31,7 +31,7 @@
         </div>
         <div class="jumbotron">
             <div id="timer-event-dwell" class="segment-display"></div>
-            <p>CURRENT TIMER EVENT DWELL</p>
+            <p>DWELL REMAINING</p>
         </div>
     </div>
     
@@ -62,7 +62,7 @@
 
     <h3>AUTOMATED MISSION</h3>
     <div id="start-mission-button" class="button">LAUNCH MISSION</div>
-    <div id="pause-mission-button" class="button">PAUSE MISSION TIMER EVENTs</div>
+    <div id="pause-mission-button" class="button">PAUSE MISSION TIMER EVENTS</div>
     <div id="reset-mission-button" class="button">STOP & RESET MISSION</div>
     <small><i>Warning:</i> Stopping and resetting the mission will kill power and reset to a pre-GSE state.</small>
 
@@ -78,6 +78,7 @@
     <script src="/static/js/jquery-ui.min.js"></script>
     <script src="/static/js/knockout-2.2.1.js"></script>
     <script src="/static/js/sevenSeg.js"></script>
+    <script src="/static/js/socket.io.js"></script>
     <script src="/static/main.js"></script>
 </body>
 </html>

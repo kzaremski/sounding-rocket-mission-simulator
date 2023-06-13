@@ -94,6 +94,8 @@ socket.on("message", function(message) {
     res.channels.TE_1_RELAY === 1 ? document.getElementById("te1-button").classList.add("active") : document.getElementById("te1-button").classList.remove("active");
     res.channels.TE_2_RELAY === 1 ? document.getElementById("te2-button").classList.add("active") : document.getElementById("te2-button").classList.remove("active");
     res.channels.TE_3_RELAY === 1 ? document.getElementById("te3-button").classList.add("active") : document.getElementById("te3-button").classList.remove("active");
+
+    // Update the mission buttons
 });
 
 // Enable/disable manual control
@@ -143,7 +145,18 @@ document.getElementById("te2-button").addEventListener("click", handleManualCont
 document.getElementById("te3-button").addEventListener("click", handleManualControlButtonClick);
 
 // * AUTOMATED MISSION
+document.getElementById("start-mission-button").addEventListener("click", async () => {
+    const button = document.getElementById("start-mission-button");
 
+});
+document.getElementById("pause-mission-button").addEventListener("click", async () => {
+    const button = document.getElementById("pause-mission-button");
+
+});
+document.getElementById("reset-mission-button").addEventListener("click", async () => {
+    const button = document.getElementById("reset-mission-button");
+
+});
 
 // Populate mission parameters
 const timerEvents = [
@@ -193,6 +206,26 @@ let missionParameters = {
     }
 } 
 
+const missionParametersTable = document.getElementById("mission-parameters-table");
+missionParametersTable.innerHTML = `
+    <tr>
+        <td>Enabled?</td>
+        <td>Event</td>
+        <td>Time</td>
+        <td>Dwell</td>
+    </tr>
+`;
+for (const timerEvent of timerEvents) {
+    missionParametersTable.innerHTML += `
+        <tr>
+            <td><input type="checkbox" id="${timerEvent}_enabled_checkbox"/></td>
+            <td>${timerEvent}</td>
+            <td><input type="number" id="${timerEvent}_time"/></td>
+            <td><input type="number" min="1" value="1" id="${timerEvent}_dwell"/></td>
+        </tr>
+    `;
+}
+
 /**
  * Reset the state of the mission parameters inputs to the values that are currently stored in memory.
  */
@@ -220,10 +253,23 @@ document.getElementById("undo-changes-button").addEventListener("click", async (
  */
 async function updateMissionParameters() {
     // Acquire the new mission parameters from the server
-    const plainResponse = await fetch("/api/mission/set");
+    const plainResponse = await fetch("/api/mission/get");
     const response = await plainResponse.json();
+    // Convert the response in to a new mission parameters objects
+    let newMissionParameters = {}
+    for (const bundle of Object.values(response)) {
+        const name = bundle[0];
+        const time = bundle[1];
+        const dwell = bundle[2];
+        const enabled = bundle[3];
+        newMissionParameters[name] = {
+            time: time,
+            dwell: dwell,
+            enabled: enabled
+        };
+    }
     // Set the mission parameters
-    missionParameters = response;
+    missionParameters = newMissionParameters;
     // Reset to the new values in memory
     resetMissionParameters();
 }
@@ -232,6 +278,9 @@ async function updateMissionParameters() {
  * Submit the new mission parameters to the backend and then update those that are registered in the memory.
  */
 async function submitMissionParameters() {
+    // Depress the button
+    const button = document.getElementById("submit-mission-parameters-button");
+    button.classList.add("active");
     // New mission parameters object
     let newMissionParameters = JSON.parse(JSON.stringify(missionParameters));
     // For each timer event
@@ -241,39 +290,40 @@ async function submitMissionParameters() {
         newMissionParameters[timerEvent].dwell = document.getElementById(`${timerEvent}_dwell`).value;
     }
     // Submit the new mission parameters object to the back end
-    await fetch("/api/mission/set", {
-        body: JSON.stringify(newMissionParameters)
-    });
+    try {
+        await fetch("/api/mission/set", {
+            method: "POST",
+            body: JSON.stringify(newMissionParameters),
+            headers: {
+                "Content-Type": "application/json",
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        });
+        alert("Saved mission parameters!");
+    } catch {
+        alert("Failed to save mission parameters!");
+    }
     // Update the mission parameters on the front end to reflect what is now saved in the database
     updateMissionParameters();
+    // Restore the button
+    button.classList.remove("active");
 }
-
-const missionParametersTable = document.getElementById("mission-parameters-table");
-missionParametersTable.innerHTML = `
-    <tr>
-        <td>Enabled?</td>
-        <td>Event</td>
-        <td>Time</td>
-        <td>Dwell</td>
-    </tr>
-`;
-for (const timerEvent of timerEvents) {
-    missionParametersTable.innerHTML += `
-        <tr>
-            <td><input type="checkbox" id="${timerEvent}_enabled_checkbox"/></td>
-            <td>${timerEvent}</td>
-            <td><input type="number id="${timerEvent}_time"/></td>
-            <td><input type="number" min="1" value="1" id="${timerEvent}_dwell"/></td>
-        </tr>
-    `;
-}
+document.getElementById("submit-mission-parameters-button").addEventListener("click", submitMissionParameters);
 
 // * Telemetry
 async function updateTelemetry() {
     const response = await fetch("/api/telemetry/get");
-    document.getElementById("telemetry").innerHTML = response;
+    const text = await response.text();
+    document.getElementById("telemetry").innerHTML = text.replaceAll(" ", "&nbsp;");
 }
 document.getElementById("clear-telemetry-button").addEventListener("click", async () => {
+    // Depress the button
+    const button = document.getElementById("clear-telemetry-button");
+    button.classList.add("active");
+    setTimeout(() => {
+        button.classList.remove("active");
+    }, 500);
+    // Do the clear on the backend
     await fetch("/api/telemetry/clear");
 })
 setInterval(updateTelemetry, 500);

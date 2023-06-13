@@ -6,12 +6,11 @@
 """
 
 # Import dependencies
-from flask import Flask, render_template, send_from_directory, request
+from flask import Flask, render_template, send_from_directory, request, jsonify
 import configparser
 import time 
 from database import Database
 import multiprocessing
-import asyncio
 import json
 from flask_socketio import SocketIO, send
 import RPi.GPIO as GPIO
@@ -62,6 +61,27 @@ def monitorTelemetry():
     while True:
         telemetryOutput += telemetrySerial.read(1)
 
+# Configure multiprocessing
+multiprocessing.set_start_method("fork")
+processQueue = multiprocessing.Queue()
+
+# Mission state variables
+missionThread = None
+missionState = "ready"
+missionTime = 0.0
+missionNextTimer = 0.0
+missionCurrentDwell = 0.0
+# Automated Mission Operation
+@app.route("/api/mission/start")
+def startMission():
+    return "Done!"
+@app.route("/api/mission/pause")
+def pauseMission():
+    return "Done!"
+@app.route("/api/mission/reset")
+def resetMission():
+    return "Done!"
+
 # State websocket
 @socketio.on("message")
 def handle_message(message):
@@ -78,10 +98,11 @@ def handle_message(message):
                 "TE_3_RELAY": GPIO.input(TE_3_RELAY),
             },
             "time": {
-                "launch": 0.0,
-                "event": 0.0,
-                "dwell": 0.0,
-            }
+                "launch": missionTime,
+                "event": missionNextTimer,
+                "dwell": missionCurrentDwell,
+            },
+            "mission": missionState
         }))
 
 # Root
@@ -124,9 +145,6 @@ def handleManualControl(channel):
     
     return "Done!"
 
-missionThread = None
-# Automated Mission Operation
-
 # Mission Parameters Management
 @app.route("/api/mission/get")
 def getMissionParameters():
@@ -139,16 +157,16 @@ def getMissionParameters():
         "TE-2": database.getTimerEvent("TE-2"),
         "TE-3": database.getTimerEvent("TE-3"),
     })
-@app.route("/api/mission/set")
-def getMissionParameters():
+@app.route("/api/mission/set", methods=['POST'])
+def setMissionParameters():
     json = request.json
-    if "GSE-1" in json: database.updateTimerEvent(json["GSE-1"]["time"], json["GSE-1"]["dwell"], json["GSE-1"]["enabled"])
-    if "GSE-2" in json: database.updateTimerEvent(json["GSE-2"]["time"], json["GSE-2"]["dwell"], json["GSE-2"]["enabled"])
-    if "TE-Ra" in json: database.updateTimerEvent(json["TE-Ra"]["time"], json["TE-Ra"]["dwell"], json["TE-Ra"]["enabled"])
-    if "TE-Rb" in json: database.updateTimerEvent(json["TE-Rb"]["time"], json["TE-Rb"]["dwell"], json["TE-Rb"]["enabled"])
-    if "TE-1" in json: database.updateTimerEvent(json["TE-1"]["time"], json["TE-1"]["dwell"], json["TE-1"]["enabled"])
-    if "TE-2" in json: database.updateTimerEvent(json["TE-2"]["time"], json["TE-2"]["dwell"], json["TE-2"]["enabled"])
-    if "TE-3" in json: database.updateTimerEvent(json["TE-3"]["time"], json["TE-3"]["dwell"], json["TE-3"]["enabled"])
+    if "GSE-1" in json: database.updateTimerEvent("GSE-1", json["GSE-1"]["time"], json["GSE-1"]["dwell"], json["GSE-1"]["enabled"])
+    if "GSE-2" in json: database.updateTimerEvent("GSE-2", json["GSE-2"]["time"], json["GSE-2"]["dwell"], json["GSE-2"]["enabled"])
+    if "TE-Ra" in json: database.updateTimerEvent("TE-Ra", json["TE-Ra"]["time"], json["TE-Ra"]["dwell"], json["TE-Ra"]["enabled"])
+    if "TE-Rb" in json: database.updateTimerEvent("TE-Rb", json["TE-Rb"]["time"], json["TE-Rb"]["dwell"], json["TE-Rb"]["enabled"])
+    if "TE-1" in json: database.updateTimerEvent("TE-1", json["TE-1"]["time"], json["TE-1"]["dwell"], json["TE-1"]["enabled"])
+    if "TE-2" in json: database.updateTimerEvent("TE-2", json["TE-2"]["time"], json["TE-2"]["dwell"], json["TE-2"]["enabled"])
+    if "TE-3" in json: database.updateTimerEvent("TE-3", json["TE-3"]["time"], json["TE-3"]["dwell"], json["TE-3"]["enabled"])
     return "Done!"
 
 # Telemetry

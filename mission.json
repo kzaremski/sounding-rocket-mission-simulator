@@ -1,0 +1,37 @@
+{
+    "GSE-1": {
+        "time": -10.0,
+        "dwell": 11.0,
+        "enabled": false
+    },
+    "GSE-2": {
+        "time": -10.0,
+        "dwell": 11.0,
+        "enabled": false
+    },
+    "TE-Ra": {
+        "time": 0.0,
+        "dwell": 1.0,
+        "enabled": false
+    },
+    "TE-Rb": {
+        "time": 0.0,
+        "dwell": 1.0,
+        "enabled": false
+    },
+    "TE-1": {
+        "time": 0.0,
+        "dwell": 1.0,
+        "enabled": false
+    },
+    "TE-2": {
+        "time": 0.0,
+        "dwell": 1.0,
+        "enabled": false
+    },
+    "TE-3": {
+        "time": 0.0,
+        "dwell": 1.0,
+        "enabled": false
+    }
+}

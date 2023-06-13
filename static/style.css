@@ -205,4 +205,10 @@ div.button.active {
     border: solid white 1px;
     padding: 5px;
     font-weight: 400;
+    min-height: 1.5em;
+}
+
+footer {
+    padding: 10px;
+    text-align: center;
 }

@@ -7,7 +7,7 @@ import sqlite3
 class Database:
     def __init__(self, fileName):
         # Connect to the provided database
-        self.con = sqlite3.connect(fileName)
+        self.con = sqlite3.connect(fileName, check_same_thread=False)
         self.db = self.con.cursor()
 
         # Create needed tables if they do not already exist
@@ -42,7 +42,8 @@ class Database:
         self.con.commit()
 
     def getTimerEvent(self, name):
-        result = self.db.execute("SELECT * FROM TimeEvents WHERE Name = ?", [name])
+        result = self.db.execute("SELECT * FROM TimerEvents WHERE Name = ?", [name])
+        self.con.commit()
         return result.fetchone()
 
 

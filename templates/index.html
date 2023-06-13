@@ -9,7 +9,7 @@
 <body>
     <img id="top-nasa-logo" src="/static/img/NASA_Worm_logo.svg">
     <h2>Community Colleges of Colorado</h2>
-    <h1>SOUNDING ROCKET SIMULATOR</h1>
+    <h1>SOUNDING ROCKET<br>MISSION SIMULATOR</h1>
     
     <h3>CURRENT MISSION DETAILS</h3>
     <div id="mission-details">
@@ -29,12 +29,48 @@
             <div id="next-timer-event" class="segment-display"></div>
             <p>NEXT TIMER EVENT</p>
         </div>
+        <div class="jumbotron">
+            <div id="timer-event-dwell" class="segment-display"></div>
+            <p>CURRENT TIMER EVENT DWELL</p>
+        </div>
     </div>
     
     <h3>OUTPUT CHANNEL INDICATORS</h3>
-    <h3>MANUAL CONTROL</h3>
+    <div id="channel-indicators">
+        <div id="master-power-indicator" class="master">MASTER POWER</div>
+        <div id="gse1-indicator" class="gse">GSE-1</div>
+        <div id="gse2-indicator" class="gse">GSE-2</div>
+        <div id="teRa-indicator" class="ter">TE-Ra</div>
+        <div id="teRb-indicator" class="ter">TE-Rb</div>
+        <div id="te1-indicator" class="te">TE-1</div>
+        <div id="te2-indicator" class="te">TE-2</div>
+        <div id="te3-indicator" class="te">TE-3</div>
+    </div>
+    
+    <h3>MANUAL CONTROL&nbsp;&nbsp;&nbsp;<input type="checkbox" id="enable-manual-control"/><small> Enable Manual Control</small></h3>
+    <div id="manual-control-buttons" class="disabled">
+        <div id="kill-power" class="button">ALL OFF / KILL POWER</div>
+        <div id="master-button" class="button">MASTER POWER</div>
+        <div id="gse1-button" class="button">GSE-1</div>
+        <div id="gse2-button" class="button">GSE-2</div>
+        <div id="teRa-button" class="button">TE-Ra</div>
+        <div id="teRb-button" class="button">TE-Rb</div>
+        <div id="te1-button" class="button">TE-1</div>
+        <div id="te2-button" class="button">TE-2</div>
+        <div id="te3-button" class="button">TE-3</div>
+    </div>
+
     <h3>AUTOMATED MISSION</h3>
+    <div id="start-mission-button" class="button">LAUNCH MISSION</div>
+    <div id="pause-mission-button" class="button">PAUSE MISSION TIMER EVENTs</div>
+    <div id="reset-mission-button" class="button">STOP & RESET MISSION</div>
+    <small><i>Warning:</i> Stopping and resetting the mission will kill power and reset to a pre-GSE state.</small>
+
     <h3>CONFIGURE MISSION PARAMETERS</h3>
+    <table id="mission-parameters-table"></table>
+    <div id="undo-changes-button" class="button">RESET CHANGES</div>
+    <div id="submit-mission-parameters-button" class="button">SUBMIT NEW MISSION PARAMETERS</div>
+    
     <h3>TELEMETRY OUTPUT</h3>
     <div id="telemetry">LOADING TELEMETRY OUTPUT</div>
     

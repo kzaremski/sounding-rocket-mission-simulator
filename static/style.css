@@ -27,6 +27,9 @@ body {
     background-color: #000000;
     font-family: "Inconsolata", sans-serif;
     color: #ffffff;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }
 
 #top-nasa-logo {
@@ -79,8 +82,127 @@ h3 {
     width: 75vw;
 }
 
+/*
+    Channel Indicators
+*/
+#channel-indicators {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+#channel-indicators div {
+    transition: 0.3s;
+    text-align: center;
+    border-style: solid;
+    border-width: 0;
+    border-radius: 10px;
+    color: #000000;
+    font-weight: 600;
+    font-size: 14pt;
+    padding: 10px;
+    letter-spacing: 0.2em;
+    margin: 4px;
+}
+
+#channel-indicators div.master {
+    background-color: rgb(0, 40, 0);
+    flex-basis: 100%;
+    width: 100%;
+}
+
+#channel-indicators div.master.active {
+    background-color: rgb(0, 255, 0);
+}
+
+#channel-indicators div.gse {
+    background-color: rgb(40, 0, 0);
+    flex-basis: calc((100% / 2) - 28px);
+}
+
+#channel-indicators div.gse.active {
+    background-color: rgb(235, 24, 24);
+}
+
+#channel-indicators div.ter {
+    background-color: rgb(40, 21, 0);
+    flex-basis: calc((100% / 2) - 28px);
+}
+
+#channel-indicators div.ter.active {
+    background-color: rgb(255, 111, 0);
+}
+
+#channel-indicators div.te {
+    background-color: rgb(39, 40, 0);
+    flex-basis: calc((100% / 3) - 28px);
+}
+
+#channel-indicators div.te.active {
+    background-color: rgb(251, 255, 0);
+}
+
+/*
+    Manual Control Buttons
+*/
+
+div.button {
+    border-width: 5px;
+    border-style: outset;
+    background-color: lightgray;
+    color: black;
+    text-align: center;
+    padding: 5px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+div.button.active {
+    border-style: inset;
+    background-color: rgb(176, 176, 176);
+}
+
+.disabled {
+    opacity: 0.5;
+}
+
+#manual-control-buttons {
+    transition: 0.5s;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+#manual-control-buttons div {
+    margin: 4px;
+    flex-basis: calc((100% / 2) - 28px);
+}
+
+#manual-control-buttons div#kill-power {
+    flex-basis: 100%;
+}
+
+/*
+    Mission Parameters
+*/
+#mission-parameters-table {
+    margin-bottom: 20px;
+}
+
+#mission-parameters-table input {
+    width: 60px;
+}
+
+#mission-parameters-table td {
+    padding-right: 15px;
+}
+
+/*
+    Telemetry
+*/
+
 #telemetry {
     border: solid white 1px;
     padding: 5px;
-    font-weight: 200;
+    font-weight: 400;
 }

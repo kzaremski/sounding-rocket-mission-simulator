@@ -4,10 +4,10 @@ Documentation=https://github.com/kzaremski
 After=network.target
 
 [Service]
-WorkingDirectory=/home/pi/sounding-rocket-tester/
+WorkingDirectory=/home/pi/sounding-rocket-mission-simulator/
 Type=simple
 User=pi
-ExecStart=/usr/bin/python3 /home/pi/wisrms/app.js
+ExecStart=/usr/bin/python3 /home/pi/sounding-rocket-mission-simulator/app.js
 Restart=on-failure
 
 [Install]

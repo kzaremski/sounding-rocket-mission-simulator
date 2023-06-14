@@ -54,6 +54,16 @@ GPIO.setup(TE_1_RELAY, GPIO.OUT)
 GPIO.setup(TE_2_RELAY, GPIO.OUT)
 GPIO.setup(TE_3_RELAY, GPIO.OUT)
 
+# Turn off all outputs
+GPIO.output(POWER_SUPPLY_RELAY, GPIO.LOW)
+GPIO.output(GSE_1_RELAY, GPIO.LOW)
+GPIO.output(GSE_2_RELAY, GPIO.LOW)
+GPIO.output(TE_R_A_RELAY, GPIO.LOW)
+GPIO.output(TE_R_B_RELAY, GPIO.LOW)
+GPIO.output(TE_1_RELAY, GPIO.LOW)
+GPIO.output(TE_2_RELAY, GPIO.LOW)
+GPIO.output(TE_3_RELAY, GPIO.LOW)    
+
 # Monitor telemetry (if we are running on a RaspberryPi)
 telemetryOutput = ""
 telemetrySerial = serial.Serial(
@@ -98,6 +108,12 @@ def simulator(missionParameters, missionTime, missionNextTimer, missionCurrentDw
         }
         fired = []
 
+        # Sorted list of 
+        def sortSecond(val):
+            return val[1]
+        activeEvents = [i for i in list(missionParameters.values()) if i[3] == 1]
+        activeEvents.sort(key=sortSecond)
+
         # Find the lowest enabled event
         lowestEnabledEvent = None
         for timerEvent in events:
@@ -115,6 +131,7 @@ def simulator(missionParameters, missionTime, missionNextTimer, missionCurrentDw
         while running:
             # Calculate mission time
             missionTime.value = time.time() - abs(missionParameters[lowestEnabledEvent][1]) - 10 - startTime
+            
             for timerEvent in events:
                 # Fire the timer event
                 if timerEvent not in fired and missionParameters[timerEvent][3] == 1 and missionTime.value >= missionParameters[timerEvent][1]:
@@ -127,6 +144,12 @@ def simulator(missionParameters, missionTime, missionNextTimer, missionCurrentDw
                 # Compute current dwell time
                 if "GSE" not in timerEvent and timerEvent in fired and "D" + timerEvent not in fired:
                     missionCurrentDwell.value = missionParameters[timerEvent][1] + missionParameters[timerEvent][2] - missionTime.value
+
+            # Try and calculate the next timer event
+            for parameter in activeEvents:
+                if parameter[0] not in fired:
+                    missionNextTimer.value = parameter[1] - missionTime.value
+                    break
 
     except Exception as e:
         print(traceback.format_exc())

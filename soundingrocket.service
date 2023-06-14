@@ -7,8 +7,5 @@ After=network.target
 WorkingDirectory=/home/pi/sounding-rocket-mission-simulator/
 Type=simple
 User=pi
-ExecStart=/usr/bin/python3 /home/pi/sounding-rocket-mission-simulator/app.js
+ExecStart=/usr/bin/python3 /home/pi/sounding-rocket-mission-simulator/app.py
 Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target

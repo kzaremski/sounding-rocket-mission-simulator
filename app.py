@@ -352,5 +352,5 @@ def send_static_resource(path):
 
 # Run if not a module
 if __name__ == "__main__":
-    socketio.run(app, port=PORT)
+    socketio.run(app, port=PORT, allow_unsafe_werkzeug=True)
     database.close()

@@ -108,7 +108,9 @@ socket.on("message", function(message) {
     res.channels.TE_3_RELAY === 1 ? document.getElementById("te3-button").classList.add("active") : document.getElementById("te3-button").classList.remove("active");
 
     // Update the mission buttons
-
+    document.getElementById("start-mission-button").classList[res.mission === "running" ? "add" : "remove"]("disabled");
+    document.getElementById("stop-mission-button").classList[res.mission === "running" ? "remove" : "add"]("disabled");
+    document.getElementById("reset-mission-button").classList[res.mission === "running" ? "remove" : "add"]("disabled");
 });
 
 // Enable/disable manual control
@@ -159,17 +161,17 @@ document.getElementById("te3-button").addEventListener("click", handleManualCont
 
 // * AUTOMATED MISSION
 document.getElementById("start-mission-button").addEventListener("click", async () => {
-    if (document.getElementById("start-mission.button").className.indexOf("disabled") >= 0) return;
+    if (document.getElementById("start-mission-button").className.indexOf("disabled") >= 0) return;
     depressButton("start-mission-button");
     await fetch("/api/mission/start");
 });
 document.getElementById("stop-mission-button").addEventListener("click", async () => {
-    if (document.getElementById("stop-mission.button").className.indexOf("disabled") >= 0) return;
+    if (document.getElementById("stop-mission-button").className.indexOf("disabled") >= 0) return;
     depressButton("stop-mission-button");
     await fetch("/api/mission/pause");
 });
 document.getElementById("reset-mission-button").addEventListener("click", async () => {
-    if (document.getElementById("reset-mission.button").className.indexOf("disabled") >= 0) return;
+    if (document.getElementById("reset-mission-button").className.indexOf("disabled") >= 0) return;
     depressButton("reset-mission-button");
     await fetch("/api/mission/reset");
 });

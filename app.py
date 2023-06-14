@@ -170,6 +170,21 @@ def startMission():
     return "Done!"
 @app.route("/api/mission/pause")
 def pauseMission():
+    global missionState
+    global missionThread
+
+    if missionState == "ready": return "No!"
+
+    # Kill the mission process
+    if missionThread != None:
+        missionThread.terminate()
+        missionThread.join()
+
+    # Reset times
+    missionTime.value = 0.0
+    missionNextTimer.value = 0.0
+    missionCurrentDwell.value = 0.0
+    
     return "Done!"
 @app.route("/api/mission/reset")
 def resetMission():

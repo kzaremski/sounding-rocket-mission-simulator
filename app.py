@@ -11,6 +11,7 @@ import configparser
 import time 
 from database import Database
 import multiprocessing
+import traceback
 import json
 from flask_socketio import SocketIO, send
 import RPi.GPIO as GPIO
@@ -18,6 +19,10 @@ import serial
  
 # Flask Application Instance
 app = Flask(__name__)
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
 # Add websocket support
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
@@ -68,24 +73,145 @@ processQueue = multiprocessing.Queue()
 # Mission state variables
 missionThread = None
 missionState = "ready"
-missionTime = 0.0
-missionNextTimer = 0.0
-missionCurrentDwell = 0.0
+missionTime = multiprocessing.Value('d', 0.0)
+missionNextTimer = multiprocessing.Value('d', 0.0)
+missionCurrentDwell = multiprocessing.Value('d', 0.0)
+def simulator(missionParameters, missionTime, missionNextTimer, missionCurrentDwell):
+    try:
+        events = [
+            "GSE-1",
+            "GSE-2",
+            "TE-Ra",
+            "TE-Rb",
+            "TE-1",
+            "TE-2",
+            "TE-3",
+        ]
+        eventChannels = {
+            "GSE-1": GSE_1_RELAY,
+            "GSE-2": GSE_2_RELAY,
+            "TE-Ra": TE_R_A_RELAY,
+            "TE-Rb": TE_R_B_RELAY,
+            "TE-1": TE_1_RELAY,
+            "TE-2": TE_1_RELAY,
+            "TE-3": TE_1_RELAY
+        }
+        fired = []
+
+        # Find the lowest enabled event
+        lowestEnabledEvent = None
+        for timerEvent in events:
+            if lowestEnabledEvent == None and missionParameters[timerEvent][3]:
+                lowestEnabledEvent = timerEvent
+            elif missionParameters[timerEvent][3] and missionParameters[timerEvent][1] < missionParameters[lowestEnabledEvent][1]:
+                lowestEnabledEvent = timerEvent
+
+        # Set mission state
+        missionState = "running"
+
+        running = True
+        GPIO.output(POWER_SUPPLY_RELAY, GPIO.HIGH) # Start the master power
+        startTime = time.time()
+        while running:
+            # Calculate mission time
+            missionTime.value = time.time() - abs(missionParameters[lowestEnabledEvent][1]) - 10 - startTime
+            for timerEvent in events:
+                # Fire the timer event
+                if timerEvent not in fired and missionParameters[timerEvent][3] == 1 and missionTime.value >= missionParameters[timerEvent][1]:
+                    fired.append(timerEvent)
+                    GPIO.output(eventChannels[timerEvent], GPIO.HIGH)
+                # Fire the dwell (off signal)
+                if "D" + timerEvent not in fired and missionParameters[timerEvent][3] == 1 and missionTime.value >= missionParameters[timerEvent][1] + missionParameters[timerEvent][2]:
+                    fired.append("D" + timerEvent)
+                    GPIO.output(eventChannels[timerEvent], GPIO.LOW)
+                # Compute current dwell time
+                if "GSE" not in timerEvent and timerEvent in fired and "D" + timerEvent not in fired:
+                    missionCurrentDwell.value = missionParameters[timerEvent][1] + missionParameters[timerEvent][2] - missionTime.value
+
+    except Exception as e:
+        print(traceback.format_exc())
+    
+    # Turn off all outputs
+    GPIO.output(POWER_SUPPLY_RELAY, GPIO.LOW)
+    GPIO.output(GSE_1_RELAY, GPIO.LOW)
+    GPIO.output(GSE_2_RELAY, GPIO.LOW)
+    GPIO.output(TE_R_A_RELAY, GPIO.LOW)
+    GPIO.output(TE_R_B_RELAY, GPIO.LOW)
+    GPIO.output(TE_1_RELAY, GPIO.LOW)
+    GPIO.output(TE_2_RELAY, GPIO.LOW)
+    GPIO.output(TE_3_RELAY, GPIO.LOW)    
+
 # Automated Mission Operation
 @app.route("/api/mission/start")
 def startMission():
+    global missionState
+    global missionThread
+    if missionState != "ready": return "No! " + missionState
+    
+    missionParameters = {
+        "GSE-1": database.getTimerEvent("GSE-1"),
+        "GSE-2": database.getTimerEvent("GSE-2"),
+        "TE-Ra": database.getTimerEvent("TE-Ra"),
+        "TE-Rb": database.getTimerEvent("TE-Rb"),
+        "TE-1": database.getTimerEvent("TE-1"),
+        "TE-2": database.getTimerEvent("TE-2"),
+        "TE-3": database.getTimerEvent("TE-3"),
+    }
+    
+    missionThread = multiprocessing.Process(target=simulator, args=[
+        missionParameters,
+        missionTime,
+        missionNextTimer,
+        missionCurrentDwell,
+    ])
+    missionThread.start()
+    missionState = "running"
+
     return "Done!"
 @app.route("/api/mission/pause")
 def pauseMission():
     return "Done!"
 @app.route("/api/mission/reset")
 def resetMission():
+    global missionState
+    global missionThread
+
+    if missionState == "ready": return "No!"
+    
+    # Kill the mission process
+    if missionThread != None:
+        missionThread.terminate()
+        missionThread.join()
+
+    # Reset times
+    missionTime.value = 0.0
+    missionNextTimer.value = 0.0
+    missionCurrentDwell.value = 0.0
+
+    # Turn off all outputs
+    GPIO.output(POWER_SUPPLY_RELAY, GPIO.LOW)
+    GPIO.output(GSE_1_RELAY, GPIO.LOW)
+    GPIO.output(GSE_2_RELAY, GPIO.LOW)
+    GPIO.output(TE_R_A_RELAY, GPIO.LOW)
+    GPIO.output(TE_R_B_RELAY, GPIO.LOW)
+    GPIO.output(TE_1_RELAY, GPIO.LOW)
+    GPIO.output(TE_2_RELAY, GPIO.LOW)
+    GPIO.output(TE_3_RELAY, GPIO.LOW)
+
+    # Reset mission state
+    missionState = "ready"
+
     return "Done!"
 
 # State websocket
 @socketio.on("message")
 def handle_message(message):
-    send(json.dumps(
+    global missionState
+    global missionTime
+    global missionNextTimer
+    global missionCurrentDwell
+    
+    output = json.dumps(
         {
             "channels": {
                 "POWER_SUPPLY_RELAY": GPIO.input(POWER_SUPPLY_RELAY),
@@ -98,12 +224,16 @@ def handle_message(message):
                 "TE_3_RELAY": GPIO.input(TE_3_RELAY),
             },
             "time": {
-                "launch": missionTime,
-                "event": missionNextTimer,
-                "dwell": missionCurrentDwell,
+                "launch": missionTime.value,
+                "event": missionNextTimer.value,
+                "dwell": missionCurrentDwell.value,
             },
             "mission": missionState
-        }))
+        }
+    )
+
+
+    send(output)
 
 # Root
 @app.route("/")
@@ -116,7 +246,6 @@ def hello_world():
 # Manual Control
 @app.route("/api/manual/<channel>")
 def handleManualControl(channel):
-    print(channel)
     if channel == "KILL":
         GPIO.output(POWER_SUPPLY_RELAY, GPIO.LOW)
         GPIO.output(GSE_1_RELAY, GPIO.LOW)

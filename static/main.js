@@ -2,6 +2,15 @@
     Payload Control Front End
 */
 
+async function depressButton(id) {
+    // Depress the button
+    const button = document.getElementById(id);
+    button.classList.add("active");
+    setTimeout(() => {
+        button.classList.remove("active");
+    }, 300);
+}
+
 // Initialize the 7 segment displays
 $("#launch-time").sevenSeg({
     digits:5, 
@@ -65,7 +74,7 @@ const socket = io();
 socket.on('connect', function() {
     setInterval(() => { 
         socket.send('get');
-    }, 30);
+    }, 90);
 });
 // Each message is a state
 socket.on("message", function(message) {
@@ -81,8 +90,11 @@ socket.on("message", function(message) {
     res.channels.TE_2_RELAY === 1 ? document.getElementById("te2-indicator").classList.add("active") : document.getElementById("te2-indicator").classList.remove("active");
     res.channels.TE_3_RELAY === 1 ? document.getElementById("te3-indicator").classList.add("active") : document.getElementById("te3-indicator").classList.remove("active");
     // Update the times
+    $("#launch-time").sevenSeg({ value: "_____" });
     $("#launch-time").sevenSeg({ value: res.time.launch.toFixed(1) });
+    $("#next-timer-event").sevenSeg({ value: "____" });
     $("#next-timer-event").sevenSeg({ value: res.time.event.toFixed(1) });
+    $("#timer-event-dwell").sevenSeg({ value: "____" });
     $("#timer-event-dwell").sevenSeg({ value: res.time.dwell.toFixed(1) });
 
     // Update the manual control buttons
@@ -96,6 +108,7 @@ socket.on("message", function(message) {
     res.channels.TE_3_RELAY === 1 ? document.getElementById("te3-button").classList.add("active") : document.getElementById("te3-button").classList.remove("active");
 
     // Update the mission buttons
+
 });
 
 // Enable/disable manual control
@@ -146,16 +159,19 @@ document.getElementById("te3-button").addEventListener("click", handleManualCont
 
 // * AUTOMATED MISSION
 document.getElementById("start-mission-button").addEventListener("click", async () => {
-    const button = document.getElementById("start-mission-button");
-
+    if (document.getElementById("start-mission.button").className.indexOf("disabled") >= 0) return;
+    depressButton("start-mission-button");
+    await fetch("/api/mission/start");
 });
-document.getElementById("pause-mission-button").addEventListener("click", async () => {
-    const button = document.getElementById("pause-mission-button");
-
+document.getElementById("stop-mission-button").addEventListener("click", async () => {
+    if (document.getElementById("stop-mission.button").className.indexOf("disabled") >= 0) return;
+    depressButton("stop-mission-button");
+    await fetch("/api/mission/pause");
 });
 document.getElementById("reset-mission-button").addEventListener("click", async () => {
-    const button = document.getElementById("reset-mission-button");
-
+    if (document.getElementById("reset-mission.button").className.indexOf("disabled") >= 0) return;
+    depressButton("reset-mission-button");
+    await fetch("/api/mission/reset");
 });
 
 // Populate mission parameters

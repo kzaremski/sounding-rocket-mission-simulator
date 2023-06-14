@@ -22,13 +22,13 @@ class Database:
         """)
         self.con.commit()
         # Create timer events
-        self.createTimerEvent("GSE-1", -60, 360, True)
-        self.createTimerEvent("GSE-2", -60, 360, False)
-        self.createTimerEvent("TE-Ra", 60, 10, False)
-        self.createTimerEvent("TE-Rb", 85, 5, False)
-        self.createTimerEvent("TE-1", 85, 10, True)
-        self.createTimerEvent("TE-2", 105, 15, True)
-        self.createTimerEvent("TE-3", 120, 20, True)
+        self.createTimerEvent("GSE-1", -20, 80, True)
+        self.createTimerEvent("GSE-2", -10, 70, False)
+        self.createTimerEvent("TE-Ra", 10, 10, False)
+        self.createTimerEvent("TE-Rb", 15, 5, False)
+        self.createTimerEvent("TE-1", 10, 10, True)
+        self.createTimerEvent("TE-2", 30, 10, False)
+        self.createTimerEvent("TE-3", 30, 10, True)
 
     def close(self):
         self.con.close()

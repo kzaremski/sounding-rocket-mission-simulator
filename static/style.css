@@ -206,6 +206,7 @@ div.button.active {
     padding: 5px;
     font-weight: 400;
     min-height: 1.5em;
+    word-wrap: break-word;
 }
 
 footer {

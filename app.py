@@ -9,6 +9,7 @@
 from flask import Flask, render_template, send_from_directory, request, jsonify
 import configparser
 import time 
+import os
 from database import Database
 import multiprocessing
 import traceback
@@ -65,7 +66,6 @@ GPIO.output(TE_2_RELAY, GPIO.LOW)
 GPIO.output(TE_3_RELAY, GPIO.LOW)    
 
 # Monitor telemetry (if we are running on a RaspberryPi)
-telemetryOutput = ""
 telemetrySerial = serial.Serial(
     port="/dev/ttyS0",
     baudrate=19200,
@@ -74,7 +74,10 @@ telemetrySerial = serial.Serial(
 def monitorTelemetry():
     # Loop and add serial output to the telemetry output string forever
     while True:
-        telemetryOutput += telemetrySerial.read(1)
+        next = str(telemetrySerial.read(1).decode('utf-8'))
+        with open("./telemetry.txt", "a") as file:
+            file.write(next)
+            file.flush()
 
 # Configure multiprocessing
 multiprocessing.set_start_method("fork")
@@ -337,12 +340,18 @@ def setMissionParameters():
     return "Done!"
 
 # Telemetry
+telemetryMonitorThread = multiprocessing.Process(target=monitorTelemetry, args=[])
+telemetryMonitorThread.start()
+
 @app.route("/api/telemetry/get")
 def getTelemetry():
+    telemetryOutput = ""
+    with open("./telemetry.txt", "r") as file:
+        telemetryOutput = file.read()
     return telemetryOutput
 @app.route("/api/telemetry/clear")
 def clearTelemetry():
-    telemetryOutput = ""
+    os.system("echo \" \" > ./telemetry.txt")
     return "Done!"
 
 # Static files

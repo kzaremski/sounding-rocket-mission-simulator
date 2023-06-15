@@ -106,8 +106,8 @@ def simulator(missionParameters, missionTime, missionNextTimer, missionCurrentDw
             "TE-Ra": TE_R_A_RELAY,
             "TE-Rb": TE_R_B_RELAY,
             "TE-1": TE_1_RELAY,
-            "TE-2": TE_1_RELAY,
-            "TE-3": TE_1_RELAY
+            "TE-2": TE_2_RELAY,
+            "TE-3": TE_3_RELAY
         }
         fired = []
 
